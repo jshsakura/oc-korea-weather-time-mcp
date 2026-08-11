@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="기상청 날씨 + 시간대 조회 MCP 서버 — Korean weather &amp; timezone MCP server">
+<title>oc-korea-weather-time-mcp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><text y='48' font-size='48'>🌤️</text></svg>">
+
+<!-- 페인트 전에 테마와 언어를 정한다. 안 하면 다크로 저장해둔 사람에게 흰 화면이 한 번
+     번쩍이고, 영어 사용자에게는 한국어가 한 프레임 보였다가 바뀐다. -->
+<script>
+  (() => {
+    const root = document.documentElement;
+    const theme = localStorage.getItem('theme');
+    if (theme === 'dark' || theme === 'light') root.dataset.theme = theme;
+
+    const saved = localStorage.getItem('lang');
+    const lang = saved === 'ko' || saved === 'en'
+      ? saved
+      : (navigator.language || '').toLowerCase().startsWith('ko') ? 'ko' : 'en';
+    root.dataset.lang = lang;
+    root.lang = lang;
+  })();
+</script>
+
+<style>
+  /* Catppuccin — Latte for light, Mocha for dark.
+     세 상태: AUTO(시스템 따름) / LIGHT / DARK. Latte 가 기본이고 Mocha 는
+     두 곳에서만 덮는다 — 시스템이 다크인데 LIGHT 를 고정하지 않았을 때,
+     그리고 사용자가 DARK 를 고정했을 때. */
+  :root {
+    --base:#eff1f5; --mantle:#e6e9ef; --crust:#dce0e8;
+    --surface0:#ccd0da; --surface1:#bcc0cc;
+    --text:#4c4f69; --subtext1:#5c5f77; --subtext0:#6c6f85; --overlay0:#9ca0b0;
+    --blue:#1e66f5; --sky:#04a5e5; --teal:#179299; --green:#40a02b;
+    --peach:#fe640b; --mauve:#8839ef; --red:#d20f39; --yellow:#df8e1d;
+    --shadow:rgba(76,79,105,.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --base:#1e1e2e; --mantle:#181825; --crust:#11111b;
+      --surface0:#313244; --surface1:#45475a;
+      --text:#cdd6f4; --subtext1:#bac2de; --subtext0:#a6adc8; --overlay0:#6c7086;
+      --blue:#89b4fa; --sky:#89dceb; --teal:#94e2d5; --green:#a6e3a1;
+      --peach:#fab387; --mauve:#cba6f7; --red:#f38ba8; --yellow:#f9e2af;
+      --shadow:rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --base:#1e1e2e; --mantle:#181825; --crust:#11111b;
+    --surface0:#313244; --surface1:#45475a;
+    --text:#cdd6f4; --subtext1:#bac2de; --subtext0:#a6adc8; --overlay0:#6c7086;
+    --blue:#89b4fa; --sky:#89dceb; --teal:#94e2d5; --green:#a6e3a1;
+    --peach:#fab387; --mauve:#cba6f7; --red:#f38ba8; --yellow:#f9e2af;
+    --shadow:rgba(0,0,0,.35);
+  }
+
+  /* 언어 전환. :not([data-lang]) 은 JS 가 죽었을 때의 바닥 — 한국어가 보이고
+     영어는 숨는다. */
+  :root[data-lang="en"] [lang="ko"] { display: none; }
+  :root[data-lang="ko"] [lang="en"] { display: none; }
+  :root:not([data-lang]) [lang="en"] { display: none; }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--base); color: var(--text);
+    font-family: 'Noto Sans KR', system-ui, -apple-system, sans-serif;
+    line-height: 1.7; letter-spacing: -.01em;
+  }
+  code, pre, .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 20px; }
+
+  /* --- 상단 바 --- */
+  .bar {
+    position: sticky; top: 0; z-index: 10;
+    background: color-mix(in srgb, var(--base) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--surface0);
+  }
+  .bar .wrap { display: flex; align-items: center; gap: 12px; height: 56px; }
+  .bar .name { font-weight: 700; font-size: .95rem; letter-spacing: -.02em; }
+  .bar .spacer { flex: 1; }
+  .btn {
+    appearance: none; border: 1px solid var(--surface1); background: var(--mantle);
+    color: var(--subtext1); border-radius: 8px; padding: 6px 10px;
+    font: inherit; font-size: .8rem; cursor: pointer; line-height: 1;
+  }
+  .btn:hover { border-color: var(--overlay0); color: var(--text); }
+
+  /* --- 히어로 --- */
+  header.hero { padding: 64px 0 40px; }
+  .badge {
+    display: inline-block; font-size: .72rem; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--sky);
+    border: 1px solid color-mix(in srgb, var(--sky) 40%, transparent);
+    border-radius: 999px; padding: 4px 12px; margin-bottom: 18px;
+  }
+  h1 {
+    margin: 0 0 14px; font-size: clamp(1.9rem, 5vw, 2.9rem);
+    letter-spacing: -.03em; line-height: 1.15;
+  }
+  h1 .accent { color: var(--sky); }
+  .lede { margin: 0 0 26px; font-size: 1.05rem; color: var(--subtext0); max-width: 64ch; }
+  .lede b { color: var(--text); font-weight: 600; }
+
+  .cta { display: flex; flex-wrap: wrap; gap: 10px; }
+  .cta a {
+    text-decoration: none; border-radius: 10px; padding: 10px 16px;
+    font-size: .88rem; font-weight: 500; border: 1px solid var(--surface1);
+    color: var(--text); background: var(--mantle);
+  }
+  .cta a.primary { background: var(--sky); border-color: var(--sky); color: var(--crust); font-weight: 700; }
+  .cta a:hover { border-color: var(--overlay0); }
+
+  /* --- 설치 한 줄 --- */
+  .install {
+    margin: 34px 0 0; background: var(--crust); border: 1px solid var(--surface0);
+    border-radius: 12px; padding: 16px 18px; display: flex; align-items: center; gap: 12px;
+  }
+  .install code { font-size: .92rem; color: var(--green); overflow-x: auto; flex: 1; }
+  .install .copy { flex: none; }
+
+  /* --- 섹션 --- */
+  section { padding: 44px 0; border-top: 1px solid var(--surface0); }
+  h2 { margin: 0 0 6px; font-size: 1.3rem; letter-spacing: -.02em; }
+  .sub { margin: 0 0 24px; color: var(--subtext0); font-size: .92rem; }
+
+  /* --- 용도 --- */
+  .why p { margin: 0 0 14px; font-size: .95rem; color: var(--subtext0); max-width: 68ch; }
+  .why p.fine { font-size: .88rem; margin-bottom: 0; }
+  .why b { color: var(--text); font-weight: 600; }
+  .hosts {
+    list-style: none; margin: 0 0 18px; padding: 0;
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .hosts li {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--mantle); border: 1px solid var(--surface0);
+    border-radius: 999px; padding: 7px 14px; font-size: .86rem;
+  }
+  .hosts a { color: var(--text); text-decoration: none; font-weight: 500; }
+  .hosts a:hover { color: var(--sky); }
+  .hosts .tag {
+    font-family: 'JetBrains Mono', monospace; font-size: .68rem;
+    color: var(--overlay0); border-left: 1px solid var(--surface1); padding-left: 8px;
+  }
+
+  /* --- 툴 표 --- */
+  .tools { display: grid; gap: 10px; }
+  .tool {
+    display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 4px 16px;
+    align-items: baseline;
+    background: var(--mantle); border: 1px solid var(--surface0);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .tool .sig { font-family: 'JetBrains Mono', monospace; font-size: .86rem; color: var(--blue); overflow-wrap: anywhere; }
+  .tool .src { font-size: .74rem; color: var(--overlay0); white-space: nowrap; }
+  .tool .desc { grid-column: 1 / -1; font-size: .88rem; color: var(--subtext0); }
+  .group-label {
+    font-size: .74rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--overlay0); margin: 22px 0 10px;
+  }
+  .group-label:first-child { margin-top: 0; }
+
+  /* --- 코드 블록 --- */
+  pre {
+    background: var(--crust); border: 1px solid var(--surface0); border-radius: 12px;
+    padding: 16px 18px; overflow-x: auto; font-size: .84rem; line-height: 1.65; margin: 0 0 14px;
+  }
+  pre .c { color: var(--overlay0); }
+  pre .k { color: var(--mauve); }
+  pre .s { color: var(--green); }
+  pre .v { color: var(--peach); }
+
+  /* --- 노트 --- */
+  .note {
+    border-left: 3px solid var(--yellow); background: color-mix(in srgb, var(--yellow) 8%, transparent);
+    padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: .88rem; color: var(--subtext1);
+    margin: 0 0 14px;
+  }
+  .note.info { border-left-color: var(--sky); background: color-mix(in srgb, var(--sky) 8%, transparent); }
+
+  /* --- 설계 메모 --- */
+  .notes { display: grid; gap: 14px; }
+  .notes > div {
+    background: var(--mantle); border: 1px solid var(--surface0);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .notes h3 { margin: 0 0 6px; font-size: .92rem; color: var(--teal); }
+  .notes p { margin: 0; font-size: .87rem; color: var(--subtext0); }
+
+  /* --- 푸터 --- */
+  footer { padding: 34px 0 56px; border-top: 1px solid var(--surface0); color: var(--overlay0); font-size: .82rem; }
+  footer a { color: var(--subtext0); }
+
+  @media (max-width: 560px) {
+    .tool { grid-template-columns: 1fr; }
+    .tool .src { white-space: normal; }
+    .install { flex-direction: column; align-items: stretch; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="wrap">
+    <span class="name">oc-korea-weather-time-mcp</span>
+    <span class="spacer"></span>
+    <button class="btn" id="lang" type="button">EN</button>
+    <button class="btn" id="theme" type="button">AUTO</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <span class="badge">Model Context Protocol</span>
+    <h1>
+      <span lang="ko">LLM 에이전트를 위한<br>한국 <span class="accent">날씨·시간</span> MCP 서버</span>
+      <span lang="en">Korean <span class="accent">weather &amp; time</span><br>for LLM agents</span>
+    </h1>
+    <p class="lede">
+      <span lang="ko">Hermes · GoClaw · OpenClaw · Claude Code 같은 에이전트에 물려서, 모델이 한국 시간과 기상청 날씨를 <b>지어내지 않고 조회</b>하게 한다. 지역은 이름으로 받고 코드값은 서버가 풀어서 넘긴다.</span>
+      <span lang="en">Wire it into Hermes, GoClaw, OpenClaw or Claude Code so the model <b>looks up</b> Korean time and KMA weather instead of inventing them. Locations by name, coded values decoded server-side.</span>
+    </p>
+    <div class="cta">
+      <a class="primary" href="https://pypi.org/project/oc-korea-weather-time-mcp/">PyPI</a>
+      <a href="https://github.com/jshsakura/oc-korea-weather-time-mcp">GitHub</a>
+      <a href="https://www.data.go.kr/data/15084084/openapi.do"><span lang="ko">서비스 키 발급</span><span lang="en">Get an API key</span></a>
+    </div>
+
+    <div class="install">
+      <code id="cmd">uvx oc-korea-weather-time-mcp</code>
+      <button class="btn copy" id="copy" type="button">copy</button>
+    </div>
+  </header>
+
+  <section>
+    <h2><span lang="ko">무엇에 쓰는 물건인가</span><span lang="en">What it is for</span></h2>
+    <p class="sub">
+      <span lang="ko">LLM 에이전트가 "지금 서울 몇 도야" 를 답할 수 있게 하는 것. 그게 전부다.</span>
+      <span lang="en">Letting an LLM agent answer “how warm is it in Seoul right now”. That is the whole point.</span>
+    </p>
+
+    <div class="why">
+      <p>
+        <span lang="ko">모델은 오늘이 며칠인지, 지금 몇 시인지, 밖이 더운지 모른다. 학습 시점에 멈춰 있고 시계도 없다. 그래서 <b>한국 시간과 한국 날씨</b>를 물어보면 그럴듯한 숫자를 지어낸다. 이 서버는 그 두 가지를 실제 출처에서 가져다 준다 — 시간은 IANA 시간대 데이터, 날씨는 기상청.</span>
+        <span lang="en">A model does not know today’s date, the current hour, or whether it is hot outside. It is frozen at training time and has no clock, so asking it about <b>Korean time or Korean weather</b> gets you a plausible-looking guess. This server fetches both from the actual sources — IANA timezone data and the Korea Meteorological Administration.</span>
+      </p>
+      <p>
+        <span lang="ko">MCP 를 말하는 에이전트면 어디든 붙는다. 만들면서 실제로 물린 곳은 다음이다.</span>
+        <span lang="en">It plugs into anything that speaks MCP. These are the hosts it was actually wired into while being built.</span>
+      </p>
+      <ul class="hosts">
+        <li><a href="https://github.com/NousResearch/hermes-agent">Hermes Agent</a><span class="tag">stdio</span></li>
+        <li><a href="https://goclaw.sh">GoClaw</a><span class="tag">stdio</span></li>
+        <li>OpenClaw<span class="tag">stdio</span></li>
+        <li><a href="https://claude.com/claude-code">Claude Code</a><span class="tag">stdio</span></li>
+      </ul>
+      <p class="fine">
+        <span lang="ko">텔레그램 봇으로 굴리는 개인 비서에 특히 잘 맞는다. "내일 아침 인천 비 와?" 한 마디에 단기예보의 강수확률까지 붙여서 답하게 하려고 만들었다.</span>
+        <span lang="en">It fits personal assistants that live in a Telegram bot especially well — built so that “will it rain in Incheon tomorrow morning?” comes back with the actual precipitation probability attached.</span>
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span lang="ko">툴 6 개</span><span lang="en">Six tools</span></h2>
+    <p class="sub">
+      <span lang="ko">툴 정의는 매 요청마다 프롬프트에 실린다. 그래서 늘리지 않았다.</span>
+      <span lang="en">Tool definitions ride along in every request, so the set is kept small.</span>
+    </p>
+
+    <div class="group-label"><span lang="ko">날씨 · 기상청 단기예보</span><span lang="en">Weather · KMA forecast</span></div>
+    <div class="tools">
+      <div class="tool">
+        <span class="sig">get_current_weather(location)</span>
+        <span class="src"><span lang="ko">초단기실황</span><span lang="en">nowcast</span></span>
+        <span class="desc"><span lang="ko">지금 관측된 기온·습도·강수형태·풍향·풍속</span><span lang="en">Observed temperature, humidity, precipitation type, wind</span></span>
+      </div>
+      <div class="tool">
+        <span class="sig">get_hourly_forecast(location, hours)</span>
+        <span class="src"><span lang="ko">초단기예보</span><span lang="en">6-hour</span></span>
+        <span class="desc"><span lang="ko">앞으로 6 시간까지 시간별 예보</span><span lang="en">Hour-by-hour forecast for the next six hours</span></span>
+      </div>
+      <div class="tool">
+        <span class="sig">get_daily_forecast(location, slots)</span>
+        <span class="src"><span lang="ko">단기예보</span><span lang="en">3-day</span></span>
+        <span class="desc"><span lang="ko">앞으로 3 일까지. 강수확률과 일최저·최고기온은 여기에만 있다</span><span lang="en">Up to three days. Precipitation probability and daily min/max live only here</span></span>
+      </div>
+    </div>
+
+    <div class="group-label"><span lang="ko">시간 · 표준 라이브러리만</span><span lang="en">Time · stdlib only</span></div>
+    <div class="tools">
+      <div class="tool">
+        <span class="sig">get_current_time(timezone)</span>
+        <span class="src">zoneinfo</span>
+        <span class="desc"><span lang="ko">현재 시각 — UTC 오프셋·요일·유닉스초까지 같이 준다</span><span lang="en">Current time, with UTC offset, weekday and epoch seconds</span></span>
+      </div>
+      <div class="tool">
+        <span class="sig">convert_time(time, from_tz, to_tz)</span>
+        <span class="src">zoneinfo</span>
+        <span class="desc"><span lang="ko">시간대 간 변환. 서머타임은 IANA 데이터가 처리한다</span><span lang="en">Convert between zones; DST comes from the IANA database</span></span>
+      </div>
+      <div class="tool">
+        <span class="sig">find_timezone(query)</span>
+        <span class="src">zoneinfo</span>
+        <span class="desc"><span lang="ko">IANA 시간대 이름 검색</span><span lang="en">Search IANA timezone names</span></span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span lang="ko">지역 지정</span><span lang="en">Locations</span></h2>
+    <p class="sub">
+      <span lang="ko">위경도를 외울 필요가 없다. 생략하면 기본 지역을 쓴다.</span>
+      <span lang="en">No coordinates to memorise. Omit it and the default location is used.</span>
+    </p>
+<pre><span class="c"><span lang="ko"># 이름·별칭·부분일치·좌표를 다 받는다</span><span lang="en"># Names, aliases, partial matches and raw coordinates all work</span></span>
+get_current_weather(<span class="s">"서울"</span>)
+get_current_weather(<span class="s">"부산광역시"</span>)
+get_current_weather(<span class="s">"성남시 분당구"</span>)
+get_current_weather(<span class="s">"37.5665,126.978"</span>)
+get_current_weather()            <span class="c">→ KMA_DEFAULT_LOCATION</span></pre>
+    <div class="note info">
+      <span lang="ko">지원하지 않는 지역을 넣으면 오류 응답에 <b>지원 목록을 실어서</b> 돌려준다. 목록 전용 툴을 두면 그만큼 매 요청 프롬프트가 무거워지기 때문이다.</span>
+      <span lang="en">An unknown location comes back as an error <b>carrying the supported list</b>. A dedicated listing tool would cost prompt space on every single request.</span>
+    </div>
+  </section>
+
+  <section>
+    <h2><span lang="ko">등록</span><span lang="en">Setup</span></h2>
+    <p class="sub">
+      <span lang="ko"><code>uvx</code> 가 실행 시점에 받아 띄운다. 설치 단계가 따로 없다.</span>
+      <span lang="en"><code>uvx</code> fetches and runs it on demand — there is no install step.</span>
+    </p>
+<pre><span class="c">Claude Code</span>
+<span class="k">claude</span> mcp add oc-korea-weather-time \
+  -e <span class="v">KMA_SERVICE_KEY</span>=<span class="s">…</span> -e <span class="v">KMA_DEFAULT_LOCATION</span>=<span class="s">서울</span> \
+  -- uvx oc-korea-weather-time-mcp
+
+<span class="c">mcp.json</span>
+{
+  <span class="v">"command"</span>: <span class="s">"uvx"</span>,
+  <span class="v">"args"</span>: [<span class="s">"oc-korea-weather-time-mcp"</span>],
+  <span class="v">"env"</span>: { <span class="v">"KMA_SERVICE_KEY"</span>: <span class="s">"…"</span> }
+}</pre>
+    <div class="note">
+      <span lang="ko"><a href="https://www.data.go.kr">공공데이터포털</a>에서 <b>기상청_단기예보 조회서비스</b> 활용신청 후 <b>일반 인증키(Decoding)</b> 를 쓴다. 인코딩 키를 넣으면 이중 인코딩으로 인증에 실패한다.</span>
+      <span lang="en">Request access to <b>기상청_단기예보 조회서비스</b> on <a href="https://www.data.go.kr">data.go.kr</a> and use the <b>Decoding</b> key. The encoded variant fails auth because it gets URL-encoded twice.</span>
+    </div>
+<pre><span class="c"><span lang="ko"># 한쪽만 쓰고 싶을 때 — 그만큼 프롬프트가 가벼워진다</span><span lang="en"># Use only one half and the prompt gets lighter</span></span>
+<span class="v">OC_KOREA_MCP_TIME</span>=<span class="s">0</span>       <span class="c"><span lang="ko">→ 날씨 3 개만</span><span lang="en">→ weather only</span></span>
+<span class="v">OC_KOREA_MCP_WEATHER</span>=<span class="s">0</span>    <span class="c"><span lang="ko">→ 시간 3 개만</span><span lang="en">→ time only</span></span></pre>
+  </section>
+
+  <section>
+    <h2><span lang="ko">설계 메모</span><span lang="en">Design notes</span></h2>
+    <p class="sub">
+      <span lang="ko">기상청 API 를 쓰다 보면 누구나 다시 만나는 것들.</span>
+      <span lang="en">The things anyone hits when they wire up this API.</span>
+    </p>
+    <div class="notes">
+      <div>
+        <h3><span lang="ko">격자 변환</span><span lang="en">Grid projection</span></h3>
+        <p><span lang="ko">기상청은 위경도를 안 받고 자체 격자를 쓴다. Lambert Conformal Conic 을 직접 구현했고 서울 (60,127) · 부산 (98,76) · 제주 (53,38) 표준값과 일치를 확인했다.</span>
+           <span lang="en">The API takes its own grid, not lat/lon. The Lambert Conformal Conic projection is implemented here and checked against the published reference points — Seoul (60,127), Busan (98,76), Jeju (53,38).</span></p>
+      </div>
+      <div>
+        <h3><span lang="ko">발표 시각</span><span lang="en">Base time</span></h3>
+        <p><span lang="ko">초단기는 매시 40 분에 생성된다. 정시 직후에 그 시각으로 부르면 빈 응답이 온다. 40 분 이전이면 한 시간 전 발표분을 쓴다. 단기예보는 하루 8 회 발표.</span>
+           <span lang="en">Nowcasts are published at :40. Ask for the current hour right after the hour and you get an empty body, so before :40 the previous hour is used. The 3-day forecast publishes eight times a day.</span></p>
+      </div>
+      <div>
+        <h3><span lang="ko">코드값을 서버가 푼다</span><span lang="en">Codes are decoded server-side</span></h3>
+        <p><span lang="ko"><code>SKY=1</code> 을 그대로 넘기면 모델이 해석을 지어낸다. <code>맑음</code> 으로 풀어서 넘기되, 매핑에 없는 코드는 임의로 해석하지 않고 <code>알 수 없음(값)</code> 으로 표시한다.</span>
+           <span lang="en">Handing <code>SKY=1</code> to a model invites invention. It is decoded here — and codes not in the table are surfaced as unknown rather than guessed at.</span></p>
+      </div>
+      <div>
+        <h3><span lang="ko">단위는 수치에만</span><span lang="en">Units only on numbers</span></h3>
+        <p><span lang="ko">기상청은 강수량 자리에 <code>강수없음</code> 같은 문자열을 섞어 보낸다. 수치일 때만 단위를 붙인다 — 안 그러면 <code>강수없음mm</code> 가 된다.</span>
+           <span lang="en">The precipitation field sometimes carries text instead of a number. Units are appended only to numeric values, otherwise you get nonsense like <code>강수없음mm</code>.</span></p>
+      </div>
+      <div>
+        <h3><span lang="ko">오류를 예외로 던지지 않는다</span><span lang="en">Failures are values, not exceptions</span></h3>
+        <p><span lang="ko">툴은 <code>{"오류": …}</code> 를 돌려준다. 모델이 다음 행동을 정할 수 있어야 하기 때문이다. 키가 없으면 발급 방법까지 같이 알려준다.</span>
+           <span lang="en">Tools return a structured error so the model can decide what to do next. A missing key comes back with instructions for getting one.</span></p>
+      </div>
+      <div>
+        <h3><span lang="ko">키는 환경변수로만</span><span lang="en">Keys stay in the environment</span></h3>
+        <p><span lang="ko"><code>httpx</code> 는 INFO 레벨에서 요청 URL 전체를 찍는데 쿼리스트링에 서비스 키가 들어 있다. 그대로 두면 로그에 평문으로 남아서, 이 서버는 해당 로거를 WARNING 으로 낮춘다.</span>
+           <span lang="en"><code>httpx</code> logs full request URLs at INFO, and the service key lives in the query string. Left alone it lands in your logs in the clear, so those loggers are turned down.</span></p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      <span lang="ko">MIT · Python 3.10+ · 데이터 출처 <a href="https://www.data.go.kr">공공데이터포털</a> 기상청 단기예보 조회서비스</span>
+      <span lang="en">MIT · Python 3.10+ · Data from the Korea Meteorological Administration via <a href="https://www.data.go.kr">data.go.kr</a></span>
+    </p>
+    <p>
+      <a href="https://github.com/jshsakura/oc-korea-weather-time-mcp">github.com/jshsakura/oc-korea-weather-time-mcp</a>
+    </p>
+  </footer>
+
+</div>
+
+<script>
+  const root = document.documentElement;
+
+  // 테마 3상태 — AUTO → LIGHT → DARK → AUTO
+  const themeBtn = document.getElementById('theme');
+  const paintTheme = () => {
+    themeBtn.textContent = root.dataset.theme ? root.dataset.theme.toUpperCase() : 'AUTO';
+  };
+  themeBtn.addEventListener('click', () => {
+    const now = root.dataset.theme;
+    if (!now) { root.dataset.theme = 'light'; localStorage.setItem('theme', 'light'); }
+    else if (now === 'light') { root.dataset.theme = 'dark'; localStorage.setItem('theme', 'dark'); }
+    else { delete root.dataset.theme; localStorage.removeItem('theme'); }
+    paintTheme();
+  });
+  paintTheme();
+
+  // 언어 토글 — 버튼에는 "바꿀 대상" 을 적는다
+  const langBtn = document.getElementById('lang');
+  const paintLang = () => { langBtn.textContent = root.dataset.lang === 'ko' ? 'EN' : 'KO'; };
+  langBtn.addEventListener('click', () => {
+    root.dataset.lang = root.dataset.lang === 'ko' ? 'en' : 'ko';
+    root.lang = root.dataset.lang;
+    localStorage.setItem('lang', root.dataset.lang);
+    paintLang();
+  });
+  paintLang();
+
+  // 설치 명령 복사
+  const copyBtn = document.getElementById('copy');
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(document.getElementById('cmd').textContent.trim());
+      copyBtn.textContent = 'copied';
+      setTimeout(() => { copyBtn.textContent = 'copy'; }, 1400);
+    } catch {
+      copyBtn.textContent = 'failed';
+      setTimeout(() => { copyBtn.textContent = 'copy'; }, 1400);
+    }
+  });
+</script>
+
+</body>
+</html>
