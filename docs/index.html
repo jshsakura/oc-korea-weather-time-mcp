@@ -254,25 +254,24 @@
 
   /* 카드 — 뜨고, 만지면 살짝 올라온다 */
   .tool, .notes > div, .hosts li {
-    transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+    transition: border-color .22s ease, box-shadow .22s ease;
   }
   .tool:hover, .notes > div:hover {
-    transform: translateY(-2px); border-color: var(--overlay0);
-    box-shadow: 0 6px 18px var(--shadow);
+    border-color: var(--overlay0);
+    box-shadow: 0 4px 14px var(--shadow);
   }
-  .hosts li:hover { transform: translateY(-2px) scale(1.02); border-color: var(--sky); }
+  .hosts li:hover { border-color: var(--sky); }
 
   /* 툴 시그니처 — 커서를 올리면 파랑이 번진다 */
-  .tool .sig { transition: color .22s ease, letter-spacing .22s ease; }
-  .tool:hover .sig { color: var(--sky); letter-spacing: .01em; }
+  .tool .sig { transition: color .22s ease; }
+  .tool:hover .sig { color: var(--sky); }
 
   /* CTA 버튼 — 빛이 한 번 훑고 지나간다 */
-  .cta a { position: relative; overflow: hidden; transition: transform .18s ease, border-color .18s ease; }
+  .cta a { position: relative; overflow: hidden; transition: border-color .18s ease, background-color .18s ease; }
   .cta a::before {
     content: ""; position: absolute; inset: 0; transform: translateX(-120%);
     background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--text) 14%, transparent), transparent);
   }
-  .cta a:hover { transform: translateY(-2px); }
   .cta a:hover::before { animation: sweep .6s ease; }
   @keyframes sweep { to { transform: translateX(120%); } }
 
@@ -286,12 +285,11 @@
   @keyframes blink { 50% { opacity: 0; } }
 
   /* 복사 성공 — 초록으로 한 번 튄다 */
-  @keyframes pop { 50% { transform: scale(1.12); } }
-  .btn.ok { color: var(--green); border-color: var(--green); animation: pop .3s ease; }
+  .btn.ok { color: var(--green); border-color: var(--green); }
 
   /* 버튼 눌림 */
-  .btn { transition: transform .12s ease, border-color .18s ease, color .18s ease; }
-  .btn:active { transform: scale(.94); }
+  .btn { transition: border-color .18s ease, color .18s ease, background-color .18s ease; }
+  .btn:active { background: var(--surface0); }
 
   /* MCP 설명 블록 — 왼쪽 보라선이 위에서 아래로 자란다 */
   .mcp101 { position: relative; overflow: hidden; }
