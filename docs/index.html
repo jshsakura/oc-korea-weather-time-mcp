@@ -132,6 +132,14 @@
   .sub { margin: 0 0 24px; color: var(--subtext0); font-size: .92rem; }
 
   /* --- 용도 --- */
+  .mcp101 {
+    background: var(--crust); border: 1px solid var(--surface0);
+    border-left: 3px solid var(--mauve);
+    border-radius: 0 12px 12px 0; padding: 16px 20px; margin: 0 0 22px;
+  }
+  .mcp101 h3 { margin: 0 0 8px; font-size: .95rem; color: var(--mauve); }
+  .mcp101 p { margin: 0 0 10px; }
+  .mcp101 p:last-child { margin-bottom: 0; }
   .why p { margin: 0 0 14px; font-size: .95rem; color: var(--subtext0); max-width: 68ch; }
   .why p.fine { font-size: .88rem; margin-bottom: 0; }
   .why b { color: var(--text); font-weight: 600; }
@@ -249,6 +257,17 @@
     </p>
 
     <div class="why">
+      <div class="mcp101">
+        <h3><span lang="ko">MCP 가 뭔가</span><span lang="en">What is MCP?</span></h3>
+        <p>
+          <span lang="ko"><b>Model Context Protocol</b> — LLM 이 외부 도구를 부를 수 있게 하는 공개 규격이다. 앱마다 따로 붙이던 연동을 하나의 프로토콜로 통일한 것이라, 규격을 지킨 <b>MCP 서버</b>를 만들어 두면 이를 지원하는 어떤 에이전트에서도 그대로 쓸 수 있다.</span>
+          <span lang="en"><b>Model Context Protocol</b> — an open standard that lets an LLM call external tools. It replaces one-off, per-app integrations with a single protocol: write one <b>MCP server</b> and every agent that speaks MCP can use it as-is.</span>
+        </p>
+        <p>
+          <span lang="ko">이 프로젝트가 그 서버다. 에이전트에 한 번 등록해 두면, 모델이 필요할 때 알아서 <code>get_current_weather("인천")</code> 같은 툴을 호출하고 결과를 받아 답한다.</span>
+          <span lang="en">This project is such a server. Register it once and the model decides when to call something like <code>get_current_weather("인천")</code>, then answers from what comes back.</span>
+        </p>
+      </div>
       <p>
         <span lang="ko">모델은 오늘이 며칠인지, 지금 몇 시인지, 밖이 더운지 모른다. 학습 시점에 멈춰 있고 시계도 없다. 그래서 <b>한국 시간과 한국 날씨</b>를 물어보면 그럴듯한 숫자를 지어낸다. 이 서버는 그 두 가지를 실제 출처에서 가져다 준다 — 시간은 IANA 시간대 데이터, 날씨는 기상청.</span>
         <span lang="en">A model does not know today’s date, the current hour, or whether it is hot outside. It is frozen at training time and has no clock, so asking it about <b>Korean time or Korean weather</b> gets you a plausible-looking guess. This server fetches both from the actual sources — IANA timezone data and the Korea Meteorological Administration.</span>
