@@ -27,7 +27,7 @@ jobs:
       - name: 테스트
         run: |
           uv venv
-          uv pip install -e . pytest
+          uv pip install -e . pytest pytest-asyncio
           uv run pytest tests/ -q
 
   build:
