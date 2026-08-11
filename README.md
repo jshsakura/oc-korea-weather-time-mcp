@@ -2,6 +2,8 @@
 
 기상청 날씨와 시간대 조회를 제공하는 MCP 서버.
 
+**소개 페이지 → https://jshsakura.github.io/oc-korea-weather-time-mcp/**
+
 ```bash
 uvx oc-korea-weather-time-mcp
 ```
