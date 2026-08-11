@@ -1,0 +1,68 @@
+name: Publish to PyPI
+
+# PyPI Trusted Publisher 설정에 이 파일명(publish.yml)을 그대로 적어야 한다.
+# 이름이 다르면 OIDC 검증에서 거부된다.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:        # 수동 실행 (TestPyPI 확인용)
+    inputs:
+      target:
+        description: "배포 대상"
+        required: true
+        default: testpypi
+        type: choice
+        options: [testpypi, pypi]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: 테스트
+        run: |
+          uv venv
+          uv pip install -e . pytest
+          uv run pytest tests/ -q
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: 빌드
+        run: uv build
+      - name: 산출물 확인
+        run: ls -la dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    # Trusted Publishing — API 토큰을 저장소 시크릿에 두지 않는다
+    permissions:
+      id-token: write
+    environment:
+      name: ${{ github.event_name == 'release' && 'pypi' || inputs.target }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: TestPyPI 업로드
+        if: github.event_name == 'workflow_dispatch' && inputs.target == 'testpypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+      - name: PyPI 업로드
+        if: github.event_name == 'release' || inputs.target == 'pypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
