@@ -242,10 +242,10 @@
   </header>
 
   <section>
-    <h2><span lang="ko">무엇에 쓰는 물건인가</span><span lang="en">What it is for</span></h2>
+    <h2><span lang="ko">왜 필요한가</span><span lang="en">Why it exists</span></h2>
     <p class="sub">
-      <span lang="ko">LLM 에이전트가 "지금 서울 몇 도야" 를 답할 수 있게 하는 것. 그게 전부다.</span>
-      <span lang="en">Letting an LLM agent answer “how warm is it in Seoul right now”. That is the whole point.</span>
+      <span lang="ko">에이전트가 "지금 서울 몇 도야" 에 제대로 답하게 하려고.</span>
+      <span lang="en">So an agent can actually answer “how warm is it in Seoul right now”.</span>
     </p>
 
     <div class="why">
@@ -345,12 +345,21 @@ get_current_weather()            <span class="c">→ KMA_DEFAULT_LOCATION</span>
   -e <span class="v">KMA_SERVICE_KEY</span>=<span class="s">…</span> -e <span class="v">KMA_DEFAULT_LOCATION</span>=<span class="s">서울</span> \
   -- uvx oc-korea-weather-time-mcp
 
-<span class="c">mcp.json</span>
+<span class="c">Hermes Agent</span>
+<span class="k">hermes</span> mcp add oc-korea-weather-time \
+  --command uvx --args oc-korea-weather-time-mcp \
+  --env <span class="v">KMA_SERVICE_KEY</span>=<span class="s">…</span> <span class="v">KMA_DEFAULT_LOCATION</span>=<span class="s">서울</span>
+
+<span class="c">mcp.json <span lang="ko">— GoClaw · OpenClaw 등</span><span lang="en">— GoClaw, OpenClaw and friends</span></span>
 {
   <span class="v">"command"</span>: <span class="s">"uvx"</span>,
   <span class="v">"args"</span>: [<span class="s">"oc-korea-weather-time-mcp"</span>],
   <span class="v">"env"</span>: { <span class="v">"KMA_SERVICE_KEY"</span>: <span class="s">"…"</span> }
 }</pre>
+    <div class="note info">
+      <span lang="ko">버전을 고정하려면 <code>oc-korea-weather-time-mcp@0.1.0</code> 처럼 붙인다. <code>uvx</code> 는 기본이 최신 추적이라, 그냥 두면 새 릴리스가 나올 때 조용히 바뀐다.</span>
+      <span lang="en">Pin a version with <code>oc-korea-weather-time-mcp@0.1.0</code>. By default <code>uvx</code> tracks the latest release, so it will change under you when one ships.</span>
+    </div>
     <div class="note">
       <span lang="ko"><a href="https://www.data.go.kr">공공데이터포털</a>에서 <b>기상청_단기예보 조회서비스</b> 활용신청 후 <b>일반 인증키(Decoding)</b> 를 쓴다. 인코딩 키를 넣으면 이중 인코딩으로 인증에 실패한다.</span>
       <span lang="en">Request access to <b>기상청_단기예보 조회서비스</b> on <a href="https://www.data.go.kr">data.go.kr</a> and use the <b>Decoding</b> key. The encoded variant fails auth because it gets URL-encoded twice.</span>
