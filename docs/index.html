@@ -230,11 +230,11 @@
   <header class="hero">
     <span class="badge">Model Context Protocol</span>
     <h1>
-      <span lang="ko">LLM 에이전트를 위한<br>한국 <span class="accent">날씨·시간</span> MCP 서버</span>
+      <span lang="ko">내 AI 비서에게<br>한국 <span class="accent">날씨와 시간</span>을</span>
       <span lang="en">Korean <span class="accent">weather &amp; time</span><br>for LLM agents</span>
     </h1>
     <p class="lede">
-      <span lang="ko">Hermes · GoClaw · OpenClaw · Claude Code 같은 에이전트에 물려서, 모델이 한국 시간과 기상청 날씨를 <b>지어내지 않고 조회</b>하게 한다. 지역은 이름으로 받고 코드값은 서버가 풀어서 넘긴다.</span>
+      <span lang="ko">AI가 한국 날씨와 시간을 <b>지어내지 않고 직접 찾아보게</b> 해줍니다. Hermes·GoClaw·Claude Code 같은 곳에 등록해서 쓰시면 됩니다.</span>
       <span lang="en">Wire it into Hermes, GoClaw, OpenClaw or Claude Code so the model <b>looks up</b> Korean time and KMA weather instead of inventing them. Locations by name, coded values decoded server-side.</span>
     </p>
     <div class="cta">
@@ -250,30 +250,30 @@
   </header>
 
   <section>
-    <h2><span lang="ko">왜 필요한가</span><span lang="en">Why it exists</span></h2>
+    <h2><span lang="ko">왜 필요한가요</span><span lang="en">Why it exists</span></h2>
     <p class="sub">
-      <span lang="ko">에이전트가 "지금 서울 몇 도야" 에 제대로 답하게 하려고.</span>
+      <span lang="ko">"지금 서울 몇 도야" 에 제대로 답하게 하려고 만들었습니다.</span>
       <span lang="en">So an agent can actually answer “how warm is it in Seoul right now”.</span>
     </p>
 
     <div class="why">
       <div class="mcp101">
-        <h3><span lang="ko">MCP 가 뭔가</span><span lang="en">What is MCP?</span></h3>
+        <h3><span lang="ko">MCP가 뭔가요</span><span lang="en">What is MCP?</span></h3>
         <p>
-          <span lang="ko"><b>Model Context Protocol</b> — LLM 이 외부 도구를 부를 수 있게 하는 공개 규격이다. 앱마다 따로 붙이던 연동을 하나의 프로토콜로 통일한 것이라, 규격을 지킨 <b>MCP 서버</b>를 만들어 두면 이를 지원하는 어떤 에이전트에서도 그대로 쓸 수 있다.</span>
+          <span lang="ko">AI가 외부 도구를 갖다 쓸 수 있게 해주는 공개 규격입니다. 예전에는 앱마다 연동을 따로 만들어야 했는데, 이제는 <b>MCP 서버</b> 하나만 만들어 두면 이 규격을 지원하는 어느 AI에서든 그대로 씁니다.</span>
           <span lang="en"><b>Model Context Protocol</b> — an open standard that lets an LLM call external tools. It replaces one-off, per-app integrations with a single protocol: write one <b>MCP server</b> and every agent that speaks MCP can use it as-is.</span>
         </p>
         <p>
-          <span lang="ko">이 프로젝트가 그 서버다. 에이전트에 한 번 등록해 두면, 모델이 필요할 때 알아서 <code>get_current_weather("인천")</code> 같은 툴을 호출하고 결과를 받아 답한다.</span>
+          <span lang="ko">이 프로젝트가 그 서버입니다. 한 번 등록해 두시면, AI가 필요할 때 알아서 <code>get_current_weather("인천")</code> 같은 걸 호출해서 답을 만듭니다.</span>
           <span lang="en">This project is such a server. Register it once and the model decides when to call something like <code>get_current_weather("인천")</code>, then answers from what comes back.</span>
         </p>
       </div>
       <p>
-        <span lang="ko">모델은 오늘이 며칠인지, 지금 몇 시인지, 밖이 더운지 모른다. 학습 시점에 멈춰 있고 시계도 없다. 그래서 <b>한국 시간과 한국 날씨</b>를 물어보면 그럴듯한 숫자를 지어낸다. 이 서버는 그 두 가지를 실제 출처에서 가져다 준다 — 시간은 IANA 시간대 데이터, 날씨는 기상청.</span>
+        <span lang="ko">AI는 오늘이 며칠인지, 지금 몇 시인지, 밖이 더운지 모릅니다. 학습한 시점에 멈춰 있고 시계도 없으니까요. 그래서 <b>한국 시간이나 날씨</b>를 물어보면 그럴듯한 숫자를 지어냅니다. 이 서버가 그 두 가지를 진짜 출처에서 가져다 줍니다. 시간은 IANA 시간대 데이터, 날씨는 기상청입니다.</span>
         <span lang="en">A model does not know today’s date, the current hour, or whether it is hot outside. It is frozen at training time and has no clock, so asking it about <b>Korean time or Korean weather</b> gets you a plausible-looking guess. This server fetches both from the actual sources — IANA timezone data and the Korea Meteorological Administration.</span>
       </p>
       <p>
-        <span lang="ko">MCP 를 말하는 에이전트면 어디든 붙는다. 만들면서 실제로 물린 곳은 다음이다.</span>
+        <span lang="ko">MCP를 지원하면 어디든 붙습니다. 만들면서 실제로 연결해 본 곳은 이렇습니다.</span>
         <span lang="en">It plugs into anything that speaks MCP. These are the hosts it was actually wired into while being built.</span>
       </p>
       <ul class="hosts">
@@ -283,7 +283,7 @@
         <li><a href="https://claude.com/claude-code">Claude Code</a><span class="tag">stdio</span></li>
       </ul>
       <p class="fine">
-        <span lang="ko">텔레그램 봇으로 굴리는 개인 비서에 특히 잘 맞는다. "내일 아침 인천 비 와?" 한 마디에 단기예보의 강수확률까지 붙여서 답하게 하려고 만들었다.</span>
+        <span lang="ko">텔레그램 봇으로 돌리는 개인 비서에 특히 잘 맞습니다. "내일 아침 인천 비 와?" 한마디에 강수확률까지 붙여서 답하게 하려고 만들었습니다.</span>
         <span lang="en">It fits personal assistants that live in a Telegram bot especially well — built so that “will it rain in Incheon tomorrow morning?” comes back with the actual precipitation probability attached.</span>
       </p>
     </div>
@@ -292,7 +292,7 @@
   <section>
     <h2><span lang="ko">툴 6 개</span><span lang="en">Six tools</span></h2>
     <p class="sub">
-      <span lang="ko">툴 정의는 매 요청마다 프롬프트에 실린다. 그래서 늘리지 않았다.</span>
+      <span lang="ko">툴 설명이 매번 AI에게 통째로 전달되기 때문에, 개수를 일부러 늘리지 않았습니다.</span>
       <span lang="en">Tool definitions ride along in every request, so the set is kept small.</span>
     </p>
 
@@ -301,17 +301,17 @@
       <div class="tool">
         <span class="sig">get_current_weather(location)</span>
         <span class="src"><span lang="ko">초단기실황</span><span lang="en">nowcast</span></span>
-        <span class="desc"><span lang="ko">지금 관측된 기온·습도·강수형태·풍향·풍속</span><span lang="en">Observed temperature, humidity, precipitation type, wind</span></span>
+        <span class="desc"><span lang="ko">지금 기온·습도·비/눈·바람</span><span lang="en">Observed temperature, humidity, precipitation type, wind</span></span>
       </div>
       <div class="tool">
         <span class="sig">get_hourly_forecast(location, hours)</span>
         <span class="src"><span lang="ko">초단기예보</span><span lang="en">6-hour</span></span>
-        <span class="desc"><span lang="ko">앞으로 6 시간까지 시간별 예보</span><span lang="en">Hour-by-hour forecast for the next six hours</span></span>
+        <span class="desc"><span lang="ko">앞으로 6시간, 한 시간 단위 예보</span><span lang="en">Hour-by-hour forecast for the next six hours</span></span>
       </div>
       <div class="tool">
         <span class="sig">get_daily_forecast(location, slots)</span>
         <span class="src"><span lang="ko">단기예보</span><span lang="en">3-day</span></span>
-        <span class="desc"><span lang="ko">앞으로 3 일까지. 강수확률과 일최저·최고기온은 여기에만 있다</span><span lang="en">Up to three days. Precipitation probability and daily min/max live only here</span></span>
+        <span class="desc"><span lang="ko">앞으로 3일치. 강수확률과 최저·최고기온은 여기에만 있습니다</span><span lang="en">Up to three days. Precipitation probability and daily min/max live only here</span></span>
       </div>
     </div>
 
@@ -320,17 +320,17 @@
       <div class="tool">
         <span class="sig">get_current_time(timezone)</span>
         <span class="src">zoneinfo</span>
-        <span class="desc"><span lang="ko">현재 시각 — UTC 오프셋·요일·유닉스초까지 같이 준다</span><span lang="en">Current time, with UTC offset, weekday and epoch seconds</span></span>
+        <span class="desc"><span lang="ko">현재 시각. 요일과 UTC 오프셋도 같이 줍니다</span><span lang="en">Current time, with UTC offset, weekday and epoch seconds</span></span>
       </div>
       <div class="tool">
         <span class="sig">convert_time(time, from_tz, to_tz)</span>
         <span class="src">zoneinfo</span>
-        <span class="desc"><span lang="ko">시간대 간 변환. 서머타임은 IANA 데이터가 처리한다</span><span lang="en">Convert between zones; DST comes from the IANA database</span></span>
+        <span class="desc"><span lang="ko">시간대끼리 변환합니다. 서머타임도 알아서 반영됩니다</span><span lang="en">Convert between zones; DST comes from the IANA database</span></span>
       </div>
       <div class="tool">
         <span class="sig">find_timezone(query)</span>
         <span class="src">zoneinfo</span>
-        <span class="desc"><span lang="ko">IANA 시간대 이름 검색</span><span lang="en">Search IANA timezone names</span></span>
+        <span class="desc"><span lang="ko">시간대 이름을 찾아줍니다</span><span lang="en">Search IANA timezone names</span></span>
       </div>
     </div>
   </section>
@@ -338,17 +338,17 @@
   <section>
     <h2><span lang="ko">지역 지정</span><span lang="en">Locations</span></h2>
     <p class="sub">
-      <span lang="ko">위경도를 외울 필요가 없다. 생략하면 기본 지역을 쓴다.</span>
+      <span lang="ko">위경도를 몰라도 됩니다. 안 적으면 기본 지역으로 조회합니다.</span>
       <span lang="en">No coordinates to memorise. Omit it and the default location is used.</span>
     </p>
-<pre><span class="c"><span lang="ko"># 이름·별칭·부분일치·좌표를 다 받는다</span><span lang="en"># Names, aliases, partial matches and raw coordinates all work</span></span>
+<pre><span class="c"><span lang="ko"># 이름, 다른 표기, 일부만 적기, 좌표 모두 됩니다</span><span lang="en"># Names, aliases, partial matches and raw coordinates all work</span></span>
 get_current_weather(<span class="s">"서울"</span>)
 get_current_weather(<span class="s">"부산광역시"</span>)
 get_current_weather(<span class="s">"성남시 분당구"</span>)
 get_current_weather(<span class="s">"37.5665,126.978"</span>)
 get_current_weather()            <span class="c">→ KMA_DEFAULT_LOCATION</span></pre>
     <div class="note info">
-      <span lang="ko">지원하지 않는 지역을 넣으면 오류 응답에 <b>지원 목록을 실어서</b> 돌려준다. 목록 전용 툴을 두면 그만큼 매 요청 프롬프트가 무거워지기 때문이다.</span>
+      <span lang="ko">없는 지역을 넣으면 <b>쓸 수 있는 지역 목록</b>을 같이 돌려줍니다. 목록 전용 툴을 따로 두면 매번 프롬프트만 무거워져서 이렇게 했습니다.</span>
       <span lang="en">An unknown location comes back as an error <b>carrying the supported list</b>. A dedicated listing tool would cost prompt space on every single request.</span>
     </div>
   </section>
@@ -356,7 +356,7 @@ get_current_weather()            <span class="c">→ KMA_DEFAULT_LOCATION</span>
   <section>
     <h2><span lang="ko">등록</span><span lang="en">Setup</span></h2>
     <p class="sub">
-      <span lang="ko"><code>uvx</code> 가 실행 시점에 받아 띄운다. 설치 단계가 따로 없다.</span>
+      <span lang="ko"><code>uvx</code>가 실행할 때 알아서 받아옵니다. 따로 설치하실 게 없습니다.</span>
       <span lang="en"><code>uvx</code> fetches and runs it on demand — there is no install step.</span>
     </p>
 <pre><span class="c">Claude Code</span>
@@ -376,14 +376,14 @@ get_current_weather()            <span class="c">→ KMA_DEFAULT_LOCATION</span>
   <span class="v">"env"</span>: { <span class="v">"KMA_SERVICE_KEY"</span>: <span class="s">"…"</span> }
 }</pre>
     <div class="note info">
-      <span lang="ko">버전을 고정하려면 <code>oc-korea-weather-time-mcp@0.1.0</code> 처럼 붙인다. <code>uvx</code> 는 기본이 최신 추적이라, 그냥 두면 새 릴리스가 나올 때 조용히 바뀐다.</span>
+      <span lang="ko">버전을 고정하시려면 <code>oc-korea-weather-time-mcp@0.1.0</code>처럼 붙이세요. 그냥 두면 새 버전이 나올 때 알아서 바뀝니다.</span>
       <span lang="en">Pin a version with <code>oc-korea-weather-time-mcp@0.1.0</code>. By default <code>uvx</code> tracks the latest release, so it will change under you when one ships.</span>
     </div>
     <div class="note">
-      <span lang="ko"><a href="https://www.data.go.kr">공공데이터포털</a>에서 <b>기상청_단기예보 조회서비스</b> 활용신청 후 <b>일반 인증키(Decoding)</b> 를 쓴다. 인코딩 키를 넣으면 이중 인코딩으로 인증에 실패한다.</span>
+      <span lang="ko"><a href="https://www.data.go.kr">공공데이터포털</a>에서 <b>기상청_단기예보 조회서비스</b>를 신청하시고 <b>일반 인증키(Decoding)</b>를 쓰세요. 인코딩 키를 넣으면 인증이 안 됩니다.</span>
       <span lang="en">Request access to <b>기상청_단기예보 조회서비스</b> on <a href="https://www.data.go.kr">data.go.kr</a> and use the <b>Decoding</b> key. The encoded variant fails auth because it gets URL-encoded twice.</span>
     </div>
-<pre><span class="c"><span lang="ko"># 한쪽만 쓰고 싶을 때 — 그만큼 프롬프트가 가벼워진다</span><span lang="en"># Use only one half and the prompt gets lighter</span></span>
+<pre><span class="c"><span lang="ko"># 한쪽만 쓰실 때. 그만큼 가벼워집니다</span><span lang="en"># Use only one half and the prompt gets lighter</span></span>
 <span class="v">OC_KOREA_MCP_TIME</span>=<span class="s">0</span>       <span class="c"><span lang="ko">→ 날씨 3 개만</span><span lang="en">→ weather only</span></span>
 <span class="v">OC_KOREA_MCP_WEATHER</span>=<span class="s">0</span>    <span class="c"><span lang="ko">→ 시간 3 개만</span><span lang="en">→ time only</span></span></pre>
   </section>
@@ -391,38 +391,38 @@ get_current_weather()            <span class="c">→ KMA_DEFAULT_LOCATION</span>
   <section>
     <h2><span lang="ko">설계 메모</span><span lang="en">Design notes</span></h2>
     <p class="sub">
-      <span lang="ko">기상청 API 를 쓰다 보면 누구나 다시 만나는 것들.</span>
+      <span lang="ko">기상청 API를 쓰다 보면 다들 한 번씩 걸리는 것들입니다.</span>
       <span lang="en">The things anyone hits when they wire up this API.</span>
     </p>
     <div class="notes">
       <div>
         <h3><span lang="ko">격자 변환</span><span lang="en">Grid projection</span></h3>
-        <p><span lang="ko">기상청은 위경도를 안 받고 자체 격자를 쓴다. Lambert Conformal Conic 을 직접 구현했고 서울 (60,127) · 부산 (98,76) · 제주 (53,38) 표준값과 일치를 확인했다.</span>
+        <p><span lang="ko">기상청은 위경도를 안 받고 자체 격자 좌표를 씁니다. 변환 공식을 직접 구현했고, 서울(60,127)·부산(98,76)·제주(53,38) 공식 값과 맞는지 확인했습니다.</span>
            <span lang="en">The API takes its own grid, not lat/lon. The Lambert Conformal Conic projection is implemented here and checked against the published reference points — Seoul (60,127), Busan (98,76), Jeju (53,38).</span></p>
       </div>
       <div>
         <h3><span lang="ko">발표 시각</span><span lang="en">Base time</span></h3>
-        <p><span lang="ko">초단기는 매시 40 분에 생성된다. 정시 직후에 그 시각으로 부르면 빈 응답이 온다. 40 분 이전이면 한 시간 전 발표분을 쓴다. 단기예보는 하루 8 회 발표.</span>
+        <p><span lang="ko">초단기 예보는 매시 40분에 나옵니다. 정시 직후에 그 시각으로 부르면 빈 응답이 옵니다. 그래서 40분 전이면 한 시간 전 것을 씁니다. 단기예보는 하루 여덟 번 나옵니다.</span>
            <span lang="en">Nowcasts are published at :40. Ask for the current hour right after the hour and you get an empty body, so before :40 the previous hour is used. The 3-day forecast publishes eight times a day.</span></p>
       </div>
       <div>
         <h3><span lang="ko">코드값을 서버가 푼다</span><span lang="en">Codes are decoded server-side</span></h3>
-        <p><span lang="ko"><code>SKY=1</code> 을 그대로 넘기면 모델이 해석을 지어낸다. <code>맑음</code> 으로 풀어서 넘기되, 매핑에 없는 코드는 임의로 해석하지 않고 <code>알 수 없음(값)</code> 으로 표시한다.</span>
+        <p><span lang="ko"><code>SKY=1</code>을 그대로 넘기면 AI가 알아서 지어냅니다. <code>맑음</code>으로 풀어서 보내되, 모르는 코드는 억지로 해석하지 않고 그대로 표시합니다.</span>
            <span lang="en">Handing <code>SKY=1</code> to a model invites invention. It is decoded here — and codes not in the table are surfaced as unknown rather than guessed at.</span></p>
       </div>
       <div>
         <h3><span lang="ko">단위는 수치에만</span><span lang="en">Units only on numbers</span></h3>
-        <p><span lang="ko">기상청은 강수량 자리에 <code>강수없음</code> 같은 문자열을 섞어 보낸다. 수치일 때만 단위를 붙인다 — 안 그러면 <code>강수없음mm</code> 가 된다.</span>
+        <p><span lang="ko">기상청은 강수량 자리에 <code>강수없음</code> 같은 글자를 섞어 보냅니다. 숫자일 때만 단위를 붙입니다. 안 그러면 <code>강수없음mm</code>가 됩니다.</span>
            <span lang="en">The precipitation field sometimes carries text instead of a number. Units are appended only to numeric values, otherwise you get nonsense like <code>강수없음mm</code>.</span></p>
       </div>
       <div>
         <h3><span lang="ko">오류를 예외로 던지지 않는다</span><span lang="en">Failures are values, not exceptions</span></h3>
-        <p><span lang="ko">툴은 <code>{"오류": …}</code> 를 돌려준다. 모델이 다음 행동을 정할 수 있어야 하기 때문이다. 키가 없으면 발급 방법까지 같이 알려준다.</span>
+        <p><span lang="ko">실패해도 툴이 <code>{"오류": …}</code>를 돌려줍니다. AI가 다음에 뭘 할지 정할 수 있어야 하니까요. 키가 없으면 받는 방법까지 같이 알려줍니다.</span>
            <span lang="en">Tools return a structured error so the model can decide what to do next. A missing key comes back with instructions for getting one.</span></p>
       </div>
       <div>
         <h3><span lang="ko">키는 환경변수로만</span><span lang="en">Keys stay in the environment</span></h3>
-        <p><span lang="ko"><code>httpx</code> 는 INFO 레벨에서 요청 URL 전체를 찍는데 쿼리스트링에 서비스 키가 들어 있다. 그대로 두면 로그에 평문으로 남아서, 이 서버는 해당 로거를 WARNING 으로 낮춘다.</span>
+        <p><span lang="ko"><code>httpx</code>는 요청 주소를 통째로 로그에 찍는데, 거기에 서비스 키가 들어 있습니다. 그대로 두면 로그에 키가 남아서 해당 로그를 꺼뒀습니다.</span>
            <span lang="en"><code>httpx</code> logs full request URLs at INFO, and the service key lives in the query string. Left alone it lands in your logs in the clear, so those loggers are turned down.</span></p>
       </div>
     </div>
@@ -430,7 +430,7 @@ get_current_weather()            <span class="c">→ KMA_DEFAULT_LOCATION</span>
 
   <footer>
     <p>
-      <span lang="ko">MIT · Python 3.10+ · 데이터 출처 <a href="https://www.data.go.kr">공공데이터포털</a> 기상청 단기예보 조회서비스</span>
+      <span lang="ko">MIT · Python 3.10+ · 날씨 데이터는 <a href="https://www.data.go.kr">공공데이터포털</a>의 기상청 단기예보 조회서비스를 씁니다</span>
       <span lang="en">MIT · Python 3.10+ · Data from the Korea Meteorological Administration via <a href="https://www.data.go.kr">data.go.kr</a></span>
     </p>
     <p>
